@@ -331,8 +331,34 @@
 .nosotros-bento {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 260px;
+  grid-template-rows: 260px 260px 130px;
   gap: 1.5rem;
+}
+
+.bento-card--feature {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  transition: transform var(--dur-base), box-shadow var(--dur-base), background var(--dur-base);
+}
+
+.bento-card--feature:nth-child(3),
+.bento-card--feature:nth-child(4),
+.bento-card--feature:nth-child(5) {
+  grid-row: 3;
+}
+
+.bento-card--feature:nth-child(3) {
+  grid-column: 1;
+}
+
+.bento-card--feature:nth-child(4) {
+  grid-column: 2;
+}
+
+.bento-card--feature:nth-child(5) {
+  grid-column: 3;
 }
 
 .bento-card {
@@ -345,7 +371,7 @@
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: var(--shadow-sm);
-  padding: 3rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
 }
@@ -372,10 +398,26 @@
 
 .bento-card--feature {
   grid-column: span 1;
-  grid-row: span 1;
-  justify-content: flex-end;
-  padding: 2.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
   transition: transform var(--dur-base), box-shadow var(--dur-base), background var(--dur-base);
+}
+
+.bento-card--feature:nth-child(3) {
+  grid-row: 3;
+  grid-column: 1;
+}
+
+.bento-card--feature:nth-child(4) {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.bento-card--feature:nth-child(5) {
+  grid-row: 3;
+  grid-column: 3;
 }
 
 .bento-card--feature:hover {
@@ -385,29 +427,35 @@
 }
 
 .bento-feature__icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 12px;
   background: var(--teal-glow);
   color: var(--teal);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+}
+
+.bento-feature__text {
+  display: flex;
+  flex-direction: column;
 }
 
 .bento-feature__title {
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 500;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: var(--white);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
 }
 
 .bento-feature__desc {
   font-size: var(--text-sm);
   color: var(--white-dim);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 /* ══ INSTALACIONES ══════════════════════════════════════════════ */
@@ -489,9 +537,9 @@
 
 .contacto__grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 6rem;
-  max-width: 1060px;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 4rem;
+  max-width: 1200px;
   margin: 0 auto;
   align-items: start;
 }

@@ -40,6 +40,7 @@
 
   .nosotros-bento {
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto 120px;
   }
 
   .bento-card--img {
@@ -52,8 +53,12 @@
     grid-column: span 2;
   }
 
-  .bento-card--feature {
+  .bento-card--feature,
+  .bento-card--feature:nth-child(3),
+  .bento-card--feature:nth-child(4),
+  .bento-card--feature:nth-child(5) {
     grid-column: span 1;
+    grid-row: span 1;
   }
 
   .galeria-grid {
@@ -100,6 +105,10 @@
 
   :root {
     --section-pad: 4rem 1.5rem;
+  }
+
+  #contacto {
+    overflow-x: hidden;
   }
 
   /* Navbar */
@@ -199,6 +208,11 @@
     border-radius: 16px;
   }
 
+  .especialidades-grid .esp-card .esp-card__desc {
+    opacity: 1;
+    transform: none;
+  }
+
   /* Galería Responsive Masonry */
   .galeria-grid {
     grid-template-columns: 1fr;
@@ -215,6 +229,38 @@
     grid-template-columns: 1fr;
   }
 
+  /* Médicos */
+  .medicos-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 1.25rem;
+    padding-bottom: 2rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--teal) var(--bg-card);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .medicos-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .medicos-grid::-webkit-scrollbar-track {
+    background: var(--bg-card);
+    border-radius: 4px;
+  }
+
+  .medicos-grid::-webkit-scrollbar-thumb {
+    background: var(--teal);
+    border-radius: 4px;
+  }
+
+  .medicos-grid .medico-card {
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    border-radius: 16px;
+  }
+
   /* Testimonios mini */
   .testimonios__mini-grid {
     grid-template-columns: 1fr;
@@ -226,8 +272,25 @@
   }
 
   /* Contacto */
-  .form-row {
+  .contacto__grid {
+    display: grid;
     grid-template-columns: 1fr;
+    gap: 2rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .contacto__info {
+    padding-right: 0;
+  }
+
+  .contacto__form-title {
+    margin-top: 0;
+  }
+
+  .contacto__info .section-title {
+    margin-bottom: 1.5rem;
   }
 
   /* Footer */
@@ -273,18 +336,30 @@
 
   .nosotros-bento {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 
   .bento-card--img {
     grid-column: span 1;
+    grid-row: span 1;
+    min-height: 200px;
   }
 
   .bento-card--intro {
     grid-column: span 1;
+    grid-row: span 1;
   }
 
   .bento-card {
     padding: 2rem 1.5rem;
+  }
+
+  .bento-card--feature,
+  .bento-card--feature:nth-child(3),
+  .bento-card--feature:nth-child(4),
+  .bento-card--feature:nth-child(5) {
+    grid-column: span 1;
+    grid-row: span 1;
   }
 
   .bento-card--intro .section-title {
