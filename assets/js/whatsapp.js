@@ -1,41 +1,67 @@
 /**
- * WHATSAPP.JS
- * Maneja el botón flotante de WhatsApp y el botón Back to Top.
+ * WHATSAPP & BACK-TO-TOP — Floating action buttons
  */
 
-const WhatsApp = (function () {
+const WhatsApp = (() => {
 
   function init() {
-    const waFloat  = document.getElementById('whatsapp-float');
-    const backTop  = document.getElementById('back-to-top');
+    initBackToTop();
+    initForm();
+  }
 
-    // Back to Top
-    if (backTop) {
-      let ticking = false;
-      window.addEventListener('scroll', () => {
-        if (!ticking) {
-          requestAnimationFrame(() => {
-            const show = window.scrollY > 400;
-            backTop.classList.toggle('visible', show);
-            ticking = false;
-          });
-          ticking = true;
+  function initBackToTop() {
+    const btn = document.getElementById('back-top');
+    if (!btn) return;
+    window.addEventListener('scroll', () => {
+      btn.classList.toggle('visible', window.scrollY > 500);
+    }, { passive: true });
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  function initForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+    const btn = form.querySelector('.btn-primary');
+    if (!btn) return;
+
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+
+      // Basic validation
+      const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+      let valid = true;
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          input.style.borderColor = 'rgba(239,68,68,0.6)';
+          valid = false;
+        } else {
+          input.style.borderColor = '';
         }
-      }, { passive: true });
-
-      backTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
-    }
+      if (!valid) return;
 
-    // WhatsApp - mostrar/ocultar basado en scroll
-    if (waFloat) {
+      const origHTML = btn.innerHTML;
+      btn.textContent = 'Enviando...';
+      btn.style.opacity = '0.8';
+      btn.disabled = true;
+
       setTimeout(() => {
-        waFloat.style.opacity = '1';
-        waFloat.style.transform = 'translateY(0)';
-      }, 1500);
-    }
+        btn.innerHTML = `Solicitud enviada &mdash; Nos contactaremos pronto`;
+        btn.style.opacity = '1';
+        btn.style.background = 'var(--teal-deeper)';
+        form.reset();
+
+        setTimeout(() => {
+          btn.innerHTML = origHTML;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 5000);
+      }, 1400);
+    });
   }
 
   return { init };
+
 })();

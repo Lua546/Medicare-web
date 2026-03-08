@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#101820"/>
+  <!-- Teal cross motif -->
+  <rect x="580" y="280" width="40" height="160" fill="#0fc4b8" opacity="0.18" rx="4"/>
+  <rect x="520" y="340" width="160" height="40" fill="#0fc4b8" opacity="0.18" rx="4"/>
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="200" x2="1200" y2="200" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <line x1="0" y1="400" x2="1200" y2="400" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <line x1="0" y1="600" x2="1200" y2="600" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <line x1="300" y1="0" x2="300" y2="800" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <line x1="600" y1="0" x2="600" y2="800" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <line x1="900" y1="0" x2="900" y2="800" stroke="#ffffff" stroke-width="0.5" opacity="0.04"/>
+  <!-- Label -->
+  <text x="600" y="460" font-family="Georgia, serif" font-size="28" fill="#0fc4b8" opacity="0.55" text-anchor="middle">Pacientes</text>
+  <text x="600" y="490" font-family="Georgia, serif" font-size="14" fill="#ffffff" opacity="0.22" text-anchor="middle">MediCare Clínica — Reemplazar con foto real</text>
+</svg>

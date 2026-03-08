@@ -1,63 +1,42 @@
 /**
- * COUNTER.JS
- * Anima contadores numéricos cuando entran en el viewport.
- * Busca elementos con atributo data-target="número" y data-suffix="+"
+ * COUNTER — Animated number counters using IntersectionObserver
  */
 
-const Counter = (function () {
-
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-  }
-
-  function animateCounter(el) {
-    const target  = parseInt(el.dataset.target, 10);
-    const suffix  = el.dataset.suffix || '';
-    const duration = target > 1000 ? 2000 : 1500;
-    const start   = performance.now();
-
-    function update(now) {
-      const elapsed  = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased    = easeOutCubic(progress);
-      const current  = Math.round(eased * target);
-
-      el.textContent = current.toLocaleString('es-PY') + suffix;
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        el.textContent = target.toLocaleString('es-PY') + suffix;
-      }
-    }
-
-    requestAnimationFrame(update);
-  }
+const Counter = (() => {
 
   function init() {
-    const counters = document.querySelectorAll('[data-target]');
-    if (!counters.length) return;
+    const observer = new IntersectionObserver(onIntersect, { threshold: 0.5 });
+    document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+  }
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      counters.forEach(el => {
-        const target = parseInt(el.dataset.target, 10);
-        const suffix = el.dataset.suffix || '';
-        el.textContent = target.toLocaleString('es-PY') + suffix;
-      });
-      return;
+  function onIntersect(entries, observer) {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      animate(el);
+      observer.unobserve(el);
+    });
+  }
+
+  function animate(el) {
+    const target   = parseInt(el.dataset.count, 10);
+    const suffix   = el.dataset.suffix || '';
+    const duration = 1800;
+    const start    = performance.now();
+
+    function tick(now) {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(eased * target);
+      el.textContent = (value >= 1000 ? value.toLocaleString('es') : value) + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
     }
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateCounter(entry.target);
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.3 });
-
-    counters.forEach(el => observer.observe(el));
+    requestAnimationFrame(tick);
   }
 
   return { init };
+
 })();

@@ -1,136 +1,102 @@
 /**
- * NAVBAR.JS
- * Maneja: sticky scroll, cambio de estilo, menú hamburguesa, enlace activo
+ * NAVBAR — Sticky scroll, active links, hamburger, scroll spy
  */
 
-const Navbar = (function () {
+const Navbar = (() => {
 
-  const SCROLL_THRESHOLD = 60;
-
-  let navbar, hamburger, mobileMenu, lastScrollY;
+  let navbar, hamburger, mobileMenu, links, pageNums;
+  let ticking = false;
 
   function init() {
     navbar      = document.getElementById('navbar');
     hamburger   = document.getElementById('nav-hamburger');
-    mobileMenu  = document.getElementById('navbar-mobile-menu');
+    mobileMenu  = document.getElementById('nav-mobile');
+    links       = [...document.querySelectorAll('.navbar__links a, .navbar__mobile a')];
+    pageNums    = [...document.querySelectorAll('.page-nums__item')];
 
     if (!navbar) return;
 
-    lastScrollY = window.scrollY;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll(); // initial call
 
-    // Aplicar estado inicial
-    updateNavbarState();
-
-    // Scroll listener (throttled)
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          updateNavbarState();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
-
-    // Hamburger
     if (hamburger) {
-      hamburger.addEventListener('click', toggleMobileMenu);
+      hamburger.addEventListener('click', toggleMobile);
     }
 
-    // Cerrar menú al hacer clic en un link del móvil
-    document.querySelectorAll('.navbar__mobile-link').forEach(link => {
-      link.addEventListener('click', closeMobileMenu);
-    });
-
-    // Cerrar al hacer clic fuera
-    document.addEventListener('click', (e) => {
-      if (mobileMenu && mobileMenu.classList.contains('open')) {
-        if (!navbar.contains(e.target)) closeMobileMenu();
-      }
-    });
-
-    // Scroll suave para todos los anchors
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', onAnchorClick);
-    });
-
-    // Resaltar sección activa en scroll
-    setupScrollSpy();
-  }
-
-  function updateNavbarState() {
-    const scrollY = window.scrollY;
-
-    if (scrollY > SCROLL_THRESHOLD) {
-      navbar.classList.remove('navbar--transparent');
-      navbar.classList.add('navbar--solid');
-    } else {
-      navbar.classList.add('navbar--transparent');
-      navbar.classList.remove('navbar--solid');
-    }
-
-    lastScrollY = scrollY;
-  }
-
-  function toggleMobileMenu() {
-    const isOpen = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('open', isOpen);
-    hamburger.setAttribute('aria-expanded', isOpen);
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-  }
-
-  function closeMobileMenu() {
-    if (!mobileMenu) return;
-    mobileMenu.classList.remove('open');
-    if (hamburger) {
-      hamburger.classList.remove('open');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-    document.body.style.overflow = '';
-  }
-
-  function onAnchorClick(e) {
-    const href = e.currentTarget.getAttribute('href');
-    if (href === '#') return;
-
-    const target = document.querySelector(href);
-    if (!target) return;
-
-    e.preventDefault();
-
-    const navHeight = parseInt(getComputedStyle(document.documentElement)
-      .getPropertyValue('--navbar-height-small')) || 60;
-
-    const top = target.getBoundingClientRect().top + window.scrollY - navHeight;
-
-    window.scrollTo({ top, behavior: 'smooth' });
-    closeMobileMenu();
-  }
-
-  function setupScrollSpy() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.navbar__link[href^="#"], .navbar__mobile-link[href^="#"]');
-
-    if (!sections.length || !navLinks.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          navLinks.forEach(link => {
-            link.classList.toggle(
-              'active',
-              link.getAttribute('href') === `#${entry.target.id}`
-            );
-          });
-        }
+    // Close mobile menu on link click
+    document.querySelectorAll('.navbar__mobile a').forEach(a => {
+      a.addEventListener('click', () => {
+        closeMobile();
       });
-    }, {
-      rootMargin: '-40% 0px -55% 0px',
     });
 
-    sections.forEach(s => observer.observe(s));
+    // Page number clicks
+    pageNums.forEach(item => {
+      item.addEventListener('click', () => {
+        const target = document.querySelector(item.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Close mobile on outside click
+    document.addEventListener('click', e => {
+      if (mobileMenu && mobileMenu.classList.contains('open')) {
+        if (!navbar.contains(e.target) && !mobileMenu.contains(e.target)) {
+          closeMobile();
+        }
+      }
+    });
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      updateSticky();
+      updateActiveLink();
+      updatePageNums();
+      ticking = false;
+    });
+  }
+
+  function updateSticky() {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  }
+
+  function updateActiveLink() {
+    const sections = [...document.querySelectorAll('section[id]')];
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    links.forEach(a => {
+      const href = a.getAttribute('href');
+      a.classList.toggle('active', href === '#' + current);
+    });
+  }
+
+  function updatePageNums() {
+    const sectionIds = ['inicio', 'servicios', 'nosotros', 'medicos', 'testimonios'];
+    let currentIdx = 0;
+    sectionIds.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 200) currentIdx = i;
+    });
+    pageNums.forEach((item, i) => {
+      item.classList.toggle('active', i === currentIdx);
+    });
+  }
+
+  function toggleMobile() {
+    const open = mobileMenu && mobileMenu.classList.toggle('open');
+    if (hamburger) hamburger.classList.toggle('open', open);
+  }
+
+  function closeMobile() {
+    if (mobileMenu) mobileMenu.classList.remove('open');
+    if (hamburger) hamburger.classList.remove('open');
   }
 
   return { init };
+
 })();

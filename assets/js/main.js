@@ -1,89 +1,36 @@
 /**
- * MAIN.JS
- * Punto de entrada principal. Orquesta todos los módulos.
+ * MAIN — Orchestrator
+ * Boots all modules in correct order after DOM is ready.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 1. Inyectar contenido desde config
-  ConfigInjector.init();
+  // 1. Inject config data into DOM
+  if (typeof SITE_CONFIG !== 'undefined' && typeof ConfigInjector !== 'undefined') {
+    ConfigInjector.init(SITE_CONFIG);
+  }
 
-  // 2. Navbar inteligente
-  Navbar.init();
+  // 2. Init scroll reveal (after injection so dynamic elements exist)
+  if (typeof ScrollReveal !== 'undefined') ScrollReveal.init();
 
-  // 3. Carruseles
-  //    Doctors: 4 visibles en desktop
-  Carousel.init('doctors-carousel', {
-    slidesVisible: 4,
-    autoplay: false,
-    loop: true,
-    gap: 16,
-  });
+  // 3. Init navbar
+  if (typeof Navbar !== 'undefined') Navbar.init();
 
-  //    Testimonios: 3 visibles en desktop
-  Carousel.init('testimonios-carousel', {
-    slidesVisible: 3,
-    autoplay: true,
-    autoplayDelay: 5000,
-    loop: true,
-    gap: 16,
-  });
+  // 4. Init animated counters
+  if (typeof Counter !== 'undefined') Counter.init();
 
-  // 4. Scroll reveal (debe ir DESPUÉS de inyectar contenido)
-  ScrollReveal.init();
+  // 5. Init FAQ accordion
+  if (typeof FAQ !== 'undefined') FAQ.init();
 
-  // 5. Contadores animados
-  Counter.init();
+  // 6. Init carousel (removed as Testimonios section was removed)
+  // if (typeof Carousel !== 'undefined') Carousel.init();
 
-  // 6. FAQ accordion
-  FAQ.init(true); // true = solo uno abierto a la vez
+  // 7. Init WhatsApp + back-to-top + form
+  if (typeof WhatsApp !== 'undefined') WhatsApp.init();
 
-  // 7. WhatsApp flotante y back-to-top
-  WhatsApp.init();
-
-  // 8. Formulario de contacto
-  initContactForm();
-
-  // 9. Animación de carga inicial
-  initPageLoad();
+  // 8. Re-run scroll reveal to pick up any injected elements
+  if (typeof ScrollReveal !== 'undefined') {
+    setTimeout(() => ScrollReveal.refresh(), 100);
+  }
 
 });
-
-// ── Formulario de contacto ──────────────────────────────────────
-
-function initContactForm() {
-  const form = document.getElementById('contact-form');
-  if (!form) return;
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const btn     = form.querySelector('[type="submit"]');
-    const success = form.querySelector('.form-success');
-
-    // Simulación de envío
-    btn.disabled  = true;
-    btn.textContent = 'Enviando…';
-
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = 'Enviar Mensaje';
-
-      if (success) {
-        success.classList.add('show');
-        setTimeout(() => success.classList.remove('show'), 5000);
-      }
-
-      form.reset();
-    }, 1500);
-  });
-}
-
-// ── Animación de entrada de página ──────────────────────────────
-
-function initPageLoad() {
-  // Pequeño delay para que el CSS esté completamente pintado
-  requestAnimationFrame(() => {
-    document.body.classList.add('loaded');
-  });
-}

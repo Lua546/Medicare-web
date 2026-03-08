@@ -1,46 +1,28 @@
 /**
- * FAQ.JS
- * Accordion accesible para preguntas frecuentes.
- * Solo un ítem puede estar abierto a la vez (configurable).
+ * FAQ — Accordion with single-open behavior
  */
 
-const FAQ = (function () {
+const FAQ = (() => {
 
-  function init(onlyOne = true) {
-    const faqItems = document.querySelectorAll('.faq-item');
-    if (!faqItems.length) return;
-
-    faqItems.forEach(item => {
-      const trigger = item.querySelector('.faq-trigger');
-      if (!trigger) return;
-
-      trigger.addEventListener('click', () => {
-        const isOpen = item.classList.contains('open');
-
-        if (onlyOne) {
-          // Cerrar todos
-          faqItems.forEach(i => {
-            i.classList.remove('open');
-            const t = i.querySelector('.faq-trigger');
-            if (t) t.setAttribute('aria-expanded', 'false');
-          });
-        }
-
-        if (!isOpen) {
-          item.classList.add('open');
-          trigger.setAttribute('aria-expanded', 'true');
-        }
-      });
-
-      // Soporte de teclado
-      trigger.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          trigger.click();
-        }
-      });
+  function init() {
+    // Use event delegation on the grid
+    const grid = document.getElementById('faq-grid');
+    if (!grid) return;
+    grid.addEventListener('click', e => {
+      const item = e.target.closest('.faq-item');
+      if (!item) return;
+      toggle(item, grid);
     });
   }
 
+  function toggle(item, grid) {
+    const isOpen = item.classList.contains('open');
+    // Close all
+    grid.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    // Open clicked (unless it was already open)
+    if (!isOpen) item.classList.add('open');
+  }
+
   return { init };
+
 })();

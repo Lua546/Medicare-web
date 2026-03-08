@@ -1,379 +1,309 @@
 /**
  * CONFIG INJECTOR
- * Lee SITE_CONFIG y construye dinámicamente el contenido del DOM.
- * Este archivo NO debe ser editado por el cliente.
+ * Reads SITE_CONFIG and populates all dynamic DOM elements.
+ * Called once the DOM is ready (from main.js).
  */
 
-const ConfigInjector = (function () {
+const ConfigInjector = (() => {
 
-  // ── Helpers ──────────────────────────────────────────────────
+  /* ── Helpers ── */
+  const $ = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-  /** Inserta HTML en todos los elementos que coincidan con el selector */
-  function setText(selector, text) {
-    document.querySelectorAll(selector).forEach(el => {
-      if (el) el.textContent = text;
+  function set(sel, val, prop = 'textContent') {
+    const el = $(sel);
+    if (el && val !== undefined && val !== null && val !== '') {
+      if (prop === 'innerHTML') el.innerHTML = val;
+      else if (prop === 'href') el.href = val;
+      else if (prop === 'src') el.src = val;
+      else el.textContent = val;
+    }
+  }
+
+  function icon(name) {
+    const icons = {
+      'stethoscope': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+      'heart-pulse': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+      'microscope': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>`,
+      'scan': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg>`,
+      'baby': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>`,
+      'bone': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18.5 5.5a4.5 4.5 0 0 1 0 6.364L12 18.364l-6.5-6.5A4.5 4.5 0 0 1 12 5.5a4.5 4.5 0 0 1 6.5 0z"/></svg>`,
+    };
+    return icons[name] || icons['stethoscope'];
+  }
+
+  function stars(n) {
+    return Array.from({ length: n }, () =>
+      `<svg class="testi-card__star" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+    ).join('');
+  }
+
+  function shieldIcon() {
+    return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+  }
+
+  /* ── SEO ── */
+  function injectSEO(cfg) {
+    document.title = cfg.seo.titulo;
+    const desc = $('meta[name="description"]');
+    if (desc) desc.content = cfg.seo.descripcion;
+    const kw = $('meta[name="keywords"]');
+    if (kw) kw.content = cfg.seo.keywords;
+  }
+
+  /* ── NAVBAR ── */
+  function injectNavbar(cfg) {
+    $$('[data-logo]').forEach(el => {
+      el.innerHTML = cfg.clinica.nombreCorto + '<span>.</span>';
     });
   }
 
-  function setHTML(selector, html) {
-    const el = document.querySelector(selector);
-    if (el) el.innerHTML = html;
+  /* ── HERO ── */
+  function injectHero(cfg) {
+    set('[data-hero-title]', null); // set in HTML with markup
+    set('[data-hero-desc]', cfg.clinica.descripcionHero);
+    set('[data-hero-eyebrow-city]', 'Asunción, Paraguay — Desde ' + (new Date().getFullYear() - cfg.clinica.aniosExperiencia));
   }
 
-  function setAttr(selector, attr, value) {
-    document.querySelectorAll(selector).forEach(el => {
-      if (el) el.setAttribute(attr, value);
+  /* ── STATS ── */
+  function injectStats(cfg) {
+    const map = [
+      { sel: '[data-stat="anios"]', val: cfg.clinica.aniosExperiencia, suffix: '' },
+      { sel: '[data-stat="pacientes"]', val: cfg.clinica.pacientesAtendidos, suffix: '' },
+      { sel: '[data-stat="especialistas"]', val: cfg.clinica.especialistas, suffix: '' },
+      { sel: '[data-stat="satisfaccion"]', val: cfg.clinica.satisfaccion, suffix: '%' },
+    ];
+    map.forEach(({ sel, val, suffix }) => {
+      const el = $(sel);
+      if (el) {
+        el.dataset.count = val;
+        el.dataset.suffix = suffix;
+        el.textContent = '0' + suffix;
+      }
     });
   }
 
-  // ── SVG Icons library ────────────────────────────────────────
-
-  const ICONS = {
-    stethoscope: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>`,
-    "heart-pulse": `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h5.27"/></svg>`,
-    microscope: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>`,
-    scan: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="7" y1="12" y2="12.01"/><line x1="12" x2="12" y1="12" y2="12.01"/><line x1="17" x2="17" y1="12" y2="12.01"/></svg>`,
-    baby: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></svg>`,
-    bone: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/></svg>`,
-    // Extras
-    shield: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-    clock: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-    phone: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.5 19.79 19.79 0 0 1 1.61 2.84 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
-    mail: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
-    mappin: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
-    calendar: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`,
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
-    star: `<svg viewBox="0 0 24 24" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-    chevrondown: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`,
-    arrowleft: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>`,
-    arrowright: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>`,
-    arrowup: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/></svg>`,
-    cross: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>`,
-    building: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M9 22V12h6v10"/><path d="M9 6h.01M12 6h.01M15 6h.01M9 10h.01M12 10h.01M15 10h.01"/></svg>`,
-    image: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
-    users: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-    heart: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-    award: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
-  };
-
-  function getIcon(name, cls = '') {
-    const svg = ICONS[name] || ICONS['cross'];
-    return `<span class="icon ${cls}">${svg}</span>`;
-  }
-
-  // ── SEO ──────────────────────────────────────────────────────
-
-  function injectSEO() {
-    const s = SITE_CONFIG.seo;
-    const c = SITE_CONFIG.clinica;
-    document.title = s.titulo;
-    setAttr('meta[name="description"]', 'content', s.descripcion);
-    setAttr('meta[name="keywords"]',    'content', s.keywords);
-    setAttr('meta[property="og:title"]','content', s.titulo);
-    setAttr('meta[property="og:description"]','content', s.descripcion);
-  }
-
-  // ── Navbar ───────────────────────────────────────────────────
-
-  function injectNavbar() {
-    const c  = SITE_CONFIG.clinica;
-    const ct = SITE_CONFIG.contacto;
-    setText('#navbar-logo-text',    c.nombreCorto);
-    setText('#navbar-logo-tagline', c.eslogan);
-    setText('#navbar-tel', ct.telefono);
-    setAttr('#navbar-phone', 'href', `tel:${ct.telefono.replace(/\s/g,'')}`);
-  }
-
-  // ── Hero ─────────────────────────────────────────────────────
-
-  function injectHero() {
-    const c = SITE_CONFIG.clinica;
-    const ct = SITE_CONFIG.contacto;
-
-    setText('#hero-title',       c.nombre);
-    setText('#hero-desc',        c.descripcionHero);
-
-    // Botón de WhatsApp hero
-    const waBtn = document.getElementById('hero-whatsapp-btn');
-    if (waBtn) {
-      waBtn.href = `https://wa.me/${ct.whatsapp}?text=${encodeURIComponent(ct.whatsappMensaje)}`;
-    }
-
-    // Servicios en hero card
-    const heroList = document.getElementById('hero-services-list');
-    if (heroList) {
-      const primeros = SITE_CONFIG.servicios.slice(0, 4);
-      heroList.innerHTML = primeros.map(s => `
-        <div class="hero__service-item">
-          <div class="hero__service-icon">${ICONS[s.icono] || ICONS.cross}</div>
-          <div>
-            <div class="hero__service-name">${s.nombre}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Social proof
-    setText('#hero-pacientes-count', '+' + c.pacientesAtendidos.toLocaleString('es-PY'));
-  }
-
-  // ── Quick bar ────────────────────────────────────────────────
-
-  function injectQuickBar() {
-    const c = SITE_CONFIG.contacto;
-    const h = SITE_CONFIG.horarios;
-    setText('#qb-telefono', c.telefono);
-    setText('#qb-email', c.email);
-    if (h.length > 0) setText('#qb-horario', h[0].hora);
-    if (h.length > 1) setText('#qb-horario-sat', h[1].hora);
-  }
-
-  // ── Sobre ────────────────────────────────────────────────────
-
-  function injectAbout() {
-    const c = SITE_CONFIG.clinica;
-    setText('#about-nombre', c.nombre);
-    setText('#about-desc', c.descripcionSobre);
-    setText('#about-anios', c.aniosExperiencia);
-  }
-
-  // ── Stats (counters) ─────────────────────────────────────────
-
-  function injectStats() {
-    const c = SITE_CONFIG.clinica;
-    const target = document.getElementById('stats-section');
-    if (!target) return;
-    target.innerHTML = `
-      <div class="container">
-        <div class="stats-grid">
-          <div class="stat-item reveal delay-1">
-            <span class="stat-item__number" data-target="${c.pacientesAtendidos}" data-suffix="+">0</span>
-            <span class="stat-item__label">Pacientes Atendidos</span>
-          </div>
-          <div class="stat-item reveal delay-2">
-            <span class="stat-item__number" data-target="${c.aniosExperiencia}" data-suffix="+">0</span>
-            <span class="stat-item__label">Años de Experiencia</span>
-          </div>
-          <div class="stat-item reveal delay-3">
-            <span class="stat-item__number" data-target="${c.especialistas}" data-suffix="">0</span>
-            <span class="stat-item__label">Especialistas</span>
-          </div>
-          <div class="stat-item reveal delay-4">
-            <span class="stat-item__number" data-target="${c.satisfaccion}" data-suffix="%">0</span>
-            <span class="stat-item__label">Satisfacción</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── Servicios ────────────────────────────────────────────────
-
-  function injectServicios() {
-    const container = document.getElementById('services-grid');
+  /* ── SERVICIOS HERO CARDS (first 3) ── */
+  function injectHeroCards(cfg) {
+    const container = $('#hero-cards');
     if (!container) return;
-    container.innerHTML = SITE_CONFIG.servicios.map((s, i) => `
-      <div class="card service-card reveal delay-${(i % 3) + 1}">
-        <div class="service-card__icon">${ICONS[s.icono] || ICONS.cross}</div>
-        <h3 class="service-card__title">${s.nombre}</h3>
-        <p class="service-card__desc">${s.descripcion}</p>
-      </div>
-    `).join('');
+    container.innerHTML = '';
+    cfg.servicios.slice(0, 3).forEach(s => {
+      container.innerHTML += `
+        <div class="hero-card">
+          <div class="hero-card__icon">${icon(s.icono)}</div>
+          <div class="hero-card__title">${s.nombre}</div>
+          <div class="hero-card__desc">${s.descripcion}</div>
+          <a href="#contacto" class="hero-card__link" data-especialidad="${s.nombre}">
+            Agendar consulta
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>`;
+    });
   }
 
-  // ── Galería ──────────────────────────────────────────────────
-
-  function injectGaleria() {
-    const container = document.getElementById('gallery-grid');
+  /* ── ESPECIALIDADES GRID ── */
+  function injectEspecialidades(cfg) {
+    const container = $('#especialidades-grid');
     if (!container) return;
-    container.innerHTML = SITE_CONFIG.galeria.map((item, i) => `
-      <div class="gallery-card reveal delay-${(i % 3) + 1}">
-        <div class="gallery-placeholder">
-          ${ICONS.image}
-          <span>${item.titulo}</span>
-        </div>
-        <div class="gallery-card__overlay">
-          <div>
-            <div class="gallery-card__title">${item.titulo}</div>
-            <div class="gallery-card__desc">${item.descripcion}</div>
+    container.innerHTML = '';
+    // Use gallery images for specialties (fallback to placeholder colors)
+    const bgImages = [
+      'https://i.pinimg.com/736x/16/54/36/165436200d222fdfb2167c6aa2031288.jpg',
+      'https://i.pinimg.com/1200x/df/51/86/df518651cbd744b3e03e2d71bbd5346c.jpg',
+      'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=600&q=80',
+      'https://i.pinimg.com/736x/3d/fa/7f/3dfa7f9829a9057957b268b631175074.jpg',
+      'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=600&q=80',
+    ];
+    cfg.servicios.forEach((s, i) => {
+      container.innerHTML += `
+        <div class="esp-card reveal${i > 0 ? ' reveal-delay-' + Math.min(i, 4) : ''}">
+          <div class="esp-card__img" style="background-image:url('${bgImages[i] || ''}')"></div>
+          <div class="esp-card__overlay"></div>
+          <div class="esp-card__content">
+            <div class="esp-card__tag">Especialidad</div>
+            <div class="esp-card__name">${s.nombre}</div>
+            <div class="esp-card__desc">${s.descripcion}</div>
           </div>
-        </div>
-      </div>
-    `).join('');
+        </div>`;
+    });
   }
 
-  // ── Médicos ──────────────────────────────────────────────────
+  /* ── NOSOTROS ── */
+  function injectNosotros(cfg) {
+    set('[data-nosotros-desc]', cfg.clinica.descripcionSobre);
+  }
 
-  function injectMedicos() {
-    const container = document.getElementById('doctors-track');
+  /* ── GALERÍA ── */
+  function injectGaleria(cfg) {
+    const container = $('#galeria-grid');
     if (!container) return;
-    container.innerHTML = SITE_CONFIG.medicos.map((m, i) => `
-      <div class="carousel__slide carousel__slide--doctor" style="width: calc(25% - 12px); min-width: 220px;">
-        <div class="card doctor-card reveal delay-${(i % 4) + 1}">
-          <div class="doctor-card__avatar">
-            ${m.imagen
-              ? `<img src="${m.imagen}" alt="${m.nombre}" loading="lazy">`
-              : `<span class="doctor-card__initials">${m.iniciales}</span>`
-            }
+    container.innerHTML = '';
+    cfg.galeria.forEach((g, i) => {
+      container.innerHTML += `
+        <div class="galeria-item reveal${i > 0 ? ' reveal-delay-' + Math.min(i, 4) : ''}">
+          <div class="galeria-item__bg" style="background-image:url('${g.imagen}')"></div>
+          <div class="galeria-item__overlay"></div>
+          <div class="galeria-item__info">
+            <div class="galeria-item__title">${g.titulo}</div>
+            <div class="galeria-item__desc">${g.descripcion}</div>
           </div>
-          <div class="doctor-card__name">${m.nombre}</div>
-          <div class="doctor-card__specialty">${m.especialidad}</div>
-          <p class="doctor-card__bio">${m.bio}</p>
-        </div>
-      </div>
-    `).join('');
+        </div>`;
+    });
   }
 
-  // ── Testimonios ──────────────────────────────────────────────
-
-  function injectTestimonios() {
-    const container = document.getElementById('testimonios-track');
+  /* ── MÉDICOS ── */
+  function injectMedicos(cfg) {
+    const container = $('#medicos-grid');
     if (!container) return;
-    container.innerHTML = SITE_CONFIG.testimonios.map((t, i) => {
-      const initials = t.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      const stars = Array.from({ length: t.calificacion }, () =>
-        `<svg class="testimonial-card__star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
-      ).join('');
-      return `
-        <div class="carousel__slide" style="width: calc(33.33% - 12px); min-width: 280px;">
-          <div class="testimonial-card reveal delay-${(i % 3) + 1}">
-            <div class="testimonial-card__quote">"</div>
-            <div class="testimonial-card__stars">${stars}</div>
-            <p class="testimonial-card__text">${t.texto}</p>
-            <div class="testimonial-card__author">
-              <div class="testimonial-card__avatar">${initials}</div>
-              <div>
-                <div class="testimonial-card__name">${t.nombre}</div>
-                <div class="testimonial-card__role">${t.cargo}</div>
-              </div>
-            </div>
+    container.innerHTML = '';
+    cfg.medicos.forEach((m, i) => {
+      const avatarContent = m.imagen
+        ? `<img src="${m.imagen}" alt="${m.nombre}" loading="lazy">`
+        : m.iniciales;
+      container.innerHTML += `
+        <div class="medico-card reveal reveal-delay-${Math.min(i, 4)}">
+          <div class="medico-card__years">${m.aniosExperiencia}</div>
+          <div class="medico-card__avatar">${avatarContent}</div>
+          <div class="medico-card__esp">${m.especialidad}</div>
+          <div class="medico-card__nombre">${m.nombre}</div>
+          <div class="medico-card__bio">${m.bio}</div>
+          <div class="medico-card__certs">
+            ${shieldIcon()}
+            ${m.certificaciones}
           </div>
-        </div>
-      `;
-    }).join('');
+        </div>`;
+    });
   }
 
-  // ── FAQ ──────────────────────────────────────────────────────
+  /* ── TESTIMONIOS ── */
+  function injectTestimonios(cfg) {
+    // Removed visually
+  }
 
-  function injectFAQ() {
-    const container = document.getElementById('faq-list');
+  /* ── FAQ ── */
+  function injectFaq(cfg) {
+    const container = $('#faq-grid');
     if (!container) return;
-    container.innerHTML = SITE_CONFIG.faq.map((item, i) => `
-      <div class="faq-item reveal delay-${(i % 3) + 1}" data-faq="${i}">
-        <button class="faq-trigger" aria-expanded="false" aria-controls="faq-content-${i}">
-          <span class="faq-trigger__text">${item.pregunta}</span>
-          <span class="faq-trigger__icon">${ICONS.chevrondown}</span>
-        </button>
-        <div class="faq-content" id="faq-content-${i}" role="region">
-          <p>${item.respuesta}</p>
-        </div>
-      </div>
-    `).join('');
+    container.innerHTML = '';
+    cfg.faq.forEach(f => {
+      container.innerHTML += `
+        <div class="faq-item">
+          <div class="faq-item__q">
+            <span>${f.pregunta}</span>
+            <svg class="faq-item__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <div class="faq-item__a">${f.respuesta}</div>
+        </div>`;
+    });
   }
 
-  // ── Contacto ─────────────────────────────────────────────────
-
-  function injectContacto() {
-    const c = SITE_CONFIG.contacto;
-    const h = SITE_CONFIG.horarios;
-
-    setText('#contact-direccion', c.direccion);
-    setText('#contact-telefono',  c.telefono);
-    setText('#contact-email',     c.email);
+  /* ── CONTACT INFO ── */
+  function injectContacto(cfg) {
+    set('[data-tel]', cfg.contacto.telefono);
+    set('[data-tel]', cfg.contacto.telefono, 'textContent');
+    set('[data-tel-href]', 'tel:' + cfg.contacto.telefono.replace(/\s/g, ''), 'href');
+    set('[data-email]', cfg.contacto.email);
+    set('[data-email-href]', 'mailto:' + cfg.contacto.email, 'href');
+    set('[data-direccion]', cfg.contacto.direccion);
 
     // Horarios
-    const horariosEl = document.getElementById('contact-horarios');
-    if (horariosEl) {
-      horariosEl.innerHTML = h.map(hr => `
-        <div class="horario-item">
-          <span class="horario-item__dia">${hr.dia}</span>
-          <span class="horario-item__hora">${hr.hora}</span>
-        </div>
-      `).join('');
+    const horDiv = $('#horarios-list');
+    if (horDiv) {
+      horDiv.innerHTML = '';
+      cfg.horarios.forEach(h => {
+        horDiv.innerHTML += `
+          <div class="horario-row">
+            <span class="horario-row__dia">${h.dia}</span>
+            <span class="horario-row__hora">${h.hora}</span>
+          </div>`;
+      });
     }
 
-    // Mapa
-    const m = SITE_CONFIG.mapa;
-    const mapEl = document.getElementById('map-container');
-    if (mapEl) {
-      if (m.embedUrl) {
-        mapEl.innerHTML = `<iframe src="${m.embedUrl}" allowfullscreen="" loading="lazy" title="Ubicación ${SITE_CONFIG.clinica.nombre}"></iframe>`;
-      } else {
-        mapEl.innerHTML = `
-          ${ICONS.mappin}
-          <span>${c.direccion}</span>
-        `;
+    // Especialidades select
+    const sel = $('#form-especialidad');
+    if (sel) {
+      cfg.servicios.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.nombre;
+        opt.textContent = s.nombre;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  /* ── REDES SOCIALES ── */
+  function injectRedes(cfg) {
+    const r = cfg.redesSociales;
+    const socials = [
+      { key: 'facebook', sel: '[data-social="facebook"]' },
+      { key: 'instagram', sel: '[data-social="instagram"]' },
+      { key: 'twitter', sel: '[data-social="twitter"]' },
+      { key: 'linkedin', sel: '[data-social="linkedin"]' },
+    ];
+    socials.forEach(({ key, sel }) => {
+      const el = $(sel);
+      if (!el) return;
+      if (r[key]) el.href = r[key];
+      else el.style.display = 'none';
+    });
+  }
+
+  /* ── WHATSAPP ── */
+  function injectWhatsapp(cfg) {
+    const msg = encodeURIComponent(cfg.contacto.whatsappMensaje);
+    const url = `https://wa.me/${cfg.contacto.whatsapp}?text=${msg}`;
+    $$('[data-wa-href]').forEach(el => el.href = url);
+  }
+
+  /* ── FOOTER ── */
+  function injectFooter(cfg) {
+    $$('[data-footer-nombre]').forEach(el => {
+      el.innerHTML = cfg.clinica.nombreCorto + '<span>.</span> Clínica';
+    });
+    $$('[data-footer-eslogan]').forEach(el => {
+      el.textContent = cfg.clinica.eslogan;
+    });
+    const yr = $('[data-footer-year]');
+    if (yr) yr.textContent = new Date().getFullYear();
+    const nm = $('[data-footer-clinica]');
+    if (nm) nm.textContent = cfg.clinica.nombre;
+  }
+
+  /* ── INIT ── */
+  function init(cfg) {
+    injectSEO(cfg);
+    injectNavbar(cfg);
+    injectHero(cfg);
+    injectStats(cfg);
+    injectHeroCards(cfg);
+    injectEspecialidades(cfg);
+    injectNosotros(cfg);
+    injectGaleria(cfg);
+    injectMedicos(cfg);
+    injectTestimonios(cfg);
+    injectFaq(cfg);
+    injectContacto(cfg);
+    injectRedes(cfg);
+    injectWhatsapp(cfg);
+    injectFooter(cfg);
+
+    // Add click listener for specialty pre-selection from hero cards
+    document.addEventListener('click', function (e) {
+      const link = e.target.closest('[data-especialidad]');
+      if (link) {
+        const specialty = link.getAttribute('data-especialidad');
+        const select = $('#form-especialidad');
+        if (select) {
+          select.value = specialty;
+        }
       }
-    }
-
-    // WhatsApp botón contacto
-    const waBtn = document.getElementById('contact-whatsapp-btn');
-    if (waBtn) {
-      waBtn.href = `https://wa.me/${c.whatsapp}?text=${encodeURIComponent(c.whatsappMensaje)}`;
-    }
+    });
   }
 
-  // ── WhatsApp flotante ────────────────────────────────────────
+  return { init };
 
-  function injectWhatsApp() {
-    const c = SITE_CONFIG.contacto;
-    const btn = document.getElementById('whatsapp-float-btn');
-    if (btn) {
-      btn.href = `https://wa.me/${c.whatsapp}?text=${encodeURIComponent(c.whatsappMensaje)}`;
-    }
-  }
-
-  // ── Footer ───────────────────────────────────────────────────
-
-  function injectFooter() {
-    const c = SITE_CONFIG.clinica;
-    const ct = SITE_CONFIG.contacto;
-    const rs = SITE_CONFIG.redesSociales;
-
-    setText('#footer-nombre', c.nombreCorto);
-    setText('#footer-desc',   `${c.descripcionHero.substring(0, 100)}…`);
-    setText('#footer-telefono', ct.telefono);
-    setText('#footer-email',    ct.email);
-    setText('#footer-direccion', ct.direccion);
-    setText('#footer-year',     new Date().getFullYear());
-    setText('#footer-marca',    c.nombre);
-
-    // Redes sociales
-    const socialsEl = document.getElementById('footer-socials');
-    if (socialsEl) {
-      const redes = [
-        { key: 'facebook', svg: `<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>` },
-        { key: 'instagram', svg: `<svg viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>` },
-        { key: 'linkedin', svg: `<svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>` },
-      ];
-      socialsEl.innerHTML = redes
-        .filter(r => rs[r.key])
-        .map(r => `
-          <a href="${rs[r.key]}" class="footer__social" target="_blank" rel="noopener noreferrer" aria-label="${r.key}">
-            ${r.svg}
-          </a>
-        `).join('');
-    }
-  }
-
-  // ── Init ─────────────────────────────────────────────────────
-
-  function init() {
-    injectSEO();
-    injectNavbar();
-    injectHero();
-    injectQuickBar();
-    injectAbout();
-    injectStats();
-    injectServicios();
-    injectGaleria();
-    injectMedicos();
-    injectTestimonios();
-    injectFAQ();
-    injectContacto();
-    injectWhatsApp();
-    injectFooter();
-  }
-
-  return { init, getIcon, ICONS };
 })();

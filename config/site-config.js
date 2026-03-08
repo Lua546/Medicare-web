@@ -3,14 +3,10 @@
  * ║              CONFIGURACIÓN DEL SITIO - CLÍNICA               ║
  * ║          Edite solo este archivo para personalizar           ║
  * ╚══════════════════════════════════════════════════════════════╝
- *
- * Este es el ÚNICO archivo que el cliente debe modificar.
- * Todos los datos aquí se inyectan automáticamente en el sitio.
  */
 
 const SITE_CONFIG = {
 
-  // ─── INFORMACIÓN BÁSICA ─────────────────────────────────────────
   clinica: {
     nombre: "MediCare Clínica",
     nombreCorto: "MediCare",
@@ -24,24 +20,21 @@ const SITE_CONFIG = {
     logoTexto: "MediCare",
   },
 
-  // ─── CONTACTO ───────────────────────────────────────────────────
   contacto: {
     telefono: "+595 21 555-0100",
     telefonoSecundario: "+595 21 555-0101",
     email: "consultas@medicare-clinica.com.py",
     direccion: "Av. Mariscal López 1234, Asunción, Paraguay",
-    whatsapp: "595981234567", // Solo números, sin + ni espacios
+    whatsapp: "595981234567",
     whatsappMensaje: "Hola, me gustaría agendar una consulta médica.",
   },
 
-  // ─── HORARIOS ───────────────────────────────────────────────────
   horarios: [
     { dia: "Lunes – Viernes", hora: "07:00 – 20:00" },
     { dia: "Sábados", hora: "08:00 – 14:00" },
     { dia: "Domingos y Feriados", hora: "Urgencias 24h" },
   ],
 
-  // ─── REDES SOCIALES ─────────────────────────────────────────────
   redesSociales: {
     facebook: "https://facebook.com/medicarecinica",
     instagram: "https://instagram.com/medicareclinica",
@@ -49,7 +42,6 @@ const SITE_CONFIG = {
     linkedin: "https://linkedin.com/company/medicare-clinica",
   },
 
-  // ─── SERVICIOS MÉDICOS ──────────────────────────────────────────
   servicios: [
     {
       icono: "stethoscope",
@@ -83,67 +75,72 @@ const SITE_CONFIG = {
     },
   ],
 
-  // ─── MÉDICOS / ESPECIALISTAS ────────────────────────────────────
   medicos: [
     {
       nombre: "Dra. Valeria Núñez",
       especialidad: "Cardióloga",
       bio: "Especialista en cardiología preventiva con 12 años de experiencia. Fellowship en Buenos Aires.",
-      imagen: null, // URL de imagen o null para placeholder
+      imagen: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
       iniciales: "VN",
+      aniosExperiencia: 12,
+      certificaciones: "MPC / FACC",
     },
     {
       nombre: "Dr. Martín Rodríguez",
       especialidad: "Médico General",
       bio: "Director médico de la clínica. Más de 15 años atendiendo a familias asuncenas con dedicación y calidez.",
-      imagen: null,
+      imagen: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80",
       iniciales: "MR",
+      aniosExperiencia: 15,
+      certificaciones: "CPM / MPA",
     },
     {
       nombre: "Dra. Sofía Galeano",
       especialidad: "Ginecóloga",
       bio: "Especialista en salud femenina y medicina materno-fetal. Certificada por el Colegio Paraguayo de Médicos.",
-      imagen: null,
+      imagen: "https://i.pinimg.com/1200x/8f/a7/a1/8fa7a15e6ccc39d177b14170701c26bb.jpg",
       iniciales: "SG",
+      aniosExperiencia: 10,
+      certificaciones: "CPM / FIGO",
     },
     {
       nombre: "Dr. Andrés Villalba",
       especialidad: "Traumatólogo",
       bio: "Experto en cirugía ortopédica y rehabilitación. Formación en la Universidad Nacional de Asunción.",
-      imagen: null,
+      imagen: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
       iniciales: "AV",
+      aniosExperiencia: 9,
+      certificaciones: "UNA / AOTrauma",
     },
   ],
 
-  // ─── TESTIMONIOS ────────────────────────────────────────────────
   testimonios: [
     {
       nombre: "María José Fernández",
-      texto: "Excelente atención desde el primer momento. Los médicos son muy profesionales y el personal administrativo siempre amable. Totalmente recomendado.",
+      texto: "Excelente atención desde el primer momento. Los médicos son muy profesionales y el personal administrativo siempre amable. Las instalaciones son modernas y limpias. Totalmente recomendado a toda mi familia.",
       calificacion: 5,
-      cargo: "Paciente frecuente",
+      cargo: "Paciente frecuente desde 2020",
     },
     {
       nombre: "Roberto Acosta",
-      texto: "Llevé a mi hijo a la consulta de medicina general y quedé muy satisfecho. Las instalaciones son modernas y limpias. La doctora fue muy clara en su explicación.",
+      texto: "Llevé a mi hijo a la consulta de medicina general y quedé muy satisfecho. La doctora fue muy clara en su explicación y el seguimiento post-consulta fue excelente. Sin dudas volvemos.",
       calificacion: 5,
       cargo: "Padre de familia",
     },
     {
       nombre: "Lucía Martínez",
-      texto: "El laboratorio es rápido y eficiente. Tuve mis resultados en pocas horas. La tecnología que usan es de primera. Sin duda la mejor clínica de la zona.",
+      texto: "El laboratorio es rápido y eficiente. Tuve mis resultados en pocas horas. La tecnología que usan es de primera. Sin duda la mejor clínica de la zona, muy recomendable.",
       calificacion: 5,
       cargo: "Paciente",
     },
     {
       nombre: "Carlos Benítez",
-      texto: "Desde que descubrí MediCare no voy a otro lugar. La atención de cardiología me salvó la vida. Excelentes profesionales con un trato muy humano.",
+      texto: "Desde que descubrí MediCare no voy a otro lugar. La atención de cardiología fue extraordinaria. Excelentes profesionales con un trato muy humano y cercano.",
       calificacion: 5,
       cargo: "Paciente cardíaco",
     },
   ],
 
-  // ─── PREGUNTAS FRECUENTES ────────────────────────────────────────
   faq: [
     {
       pregunta: "¿Cómo puedo agendar una consulta?",
@@ -171,27 +168,20 @@ const SITE_CONFIG = {
     },
   ],
 
-  // ─── GALERÍA / INSTALACIONES ─────────────────────────────────────
   galeria: [
-    { titulo: "Sala de Espera", descripcion: "Ambiente cómodo y climatizado" },
-    { titulo: "Consultorio Principal", descripcion: "Equipamiento moderno" },
-    { titulo: "Laboratorio", descripcion: "Tecnología de precisión" },
-    { titulo: "Sala de Imágenes", descripcion: "Diagnóstico por imagen digital" },
-    { titulo: "Recepción", descripcion: "Personal atento y capacitado" },
-    { titulo: "Área Pediátrica", descripcion: "Espacios amigables para niños" },
+    { titulo: "Sala de Espera", descripcion: "Ambiente cómodo y climatizado", imagen: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80" },
+    { titulo: "Consultorio Principal", descripcion: "Equipamiento moderno", imagen: "https://i.pinimg.com/1200x/8b/ab/c5/8babc57027fcf97e8ed59aec71dc0738.jpg" },
+    { titulo: "Laboratorio", descripcion: "Tecnología de precisión", imagen: "https://i.pinimg.com/736x/ae/51/0c/ae510c6dbc8025fb69da1e39a604436d.jpg" },
+    { titulo: "Sala de Imágenes", descripcion: "Diagnóstico por imagen digital", imagen: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80" },
   ],
 
-  // ─── MAPA ────────────────────────────────────────────────────────
   mapa: {
-    // Coordenadas de Asunción, Paraguay (Av. Mariscal López)
     lat: -25.2867,
     lng: -57.6470,
     zoom: 16,
-    // Si tienes un embed de Google Maps, pega la URL aquí
     embedUrl: "",
   },
 
-  // ─── SEO ─────────────────────────────────────────────────────────
   seo: {
     titulo: "MediCare Clínica | Atención Médica Integral en Asunción",
     descripcion: "Clínica privada en Asunción, Paraguay. Medicina general, cardiología, laboratorio, ginecología y más. Agendá tu consulta hoy.",
@@ -200,5 +190,4 @@ const SITE_CONFIG = {
 
 };
 
-// No modificar esta línea
 if (typeof module !== "undefined") module.exports = SITE_CONFIG;

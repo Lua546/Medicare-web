@@ -1,216 +1,93 @@
 /**
- * CAROUSEL.JS
- * Carousel reutilizable con soporte táctil, dots y botones prev/next.
- * Uso: Carousel.init(selector, opciones)
+ * CAROUSEL — Reusable testimonios carousel with touch/swipe support
  */
 
-const Carousel = (function () {
+const Carousel = (() => {
 
-  /**
-   * Inicializa un carousel.
-   * @param {string} wrapperId - ID del elemento contenedor del carousel
-   * @param {Object} options
-   * @param {number} options.slidesVisible - Slides visibles (default: 3)
-   * @param {boolean} options.autoplay - Autoplay activado (default: false)
-   * @param {number} options.autoplayDelay - ms entre slides (default: 4000)
-   * @param {boolean} options.loop - Loop infinito (default: true)
-   */
-  function init(wrapperId, options = {}) {
-    const wrapper = document.getElementById(wrapperId);
-    if (!wrapper) return;
+  function init() {
+    initTestimoniosCarousel();
+  }
 
-    const config = {
-      autoplay:      options.autoplay      ?? false,
-      autoplayDelay: options.autoplayDelay ?? 4500,
-      loop:          options.loop          ?? true,
-      gap:           options.gap           ?? 16,
-    };
+  function initTestimoniosCarousel() {
+    if (!window.SITE_CONFIG) return;
+    const data = SITE_CONFIG.testimonios;
+    if (!data || !data.length) return;
 
-    const track    = wrapper.querySelector('.carousel__track');
-    const prevBtn  = wrapper.querySelector('[data-carousel-prev]');
-    const nextBtn  = wrapper.querySelector('[data-carousel-next]');
-    const dotsWrap = wrapper.querySelector('.carousel__dots');
-    const slides   = Array.from(track ? track.children : []);
+    let current = 0;
+    let autoTimer = null;
 
-    if (!track || !slides.length) return;
+    const textEl   = document.getElementById('testi-text');
+    const authorEl = document.getElementById('testi-author');
+    const cargoEl  = document.getElementById('testi-cargo');
+    const starsEl  = document.getElementById('testi-stars');
+    const prevBtn  = document.getElementById('testi-prev');
+    const nextBtn  = document.getElementById('testi-next');
 
-    let current     = 0;
-    let autoplayTimer = null;
-    let isDragging  = false;
-    let dragStartX  = 0;
-    let dragOffset  = 0;
+    if (!textEl) return;
 
-    // ── Calcular cuántos slides caben ──────────────────────────
+    function show(idx, dir = 1) {
+      current = ((idx % data.length) + data.length) % data.length;
+      const t = data[current];
 
-    function getSlidesVisible() {
-      const w = wrapper.offsetWidth;
-      if (w < 480)  return 1;
-      if (w < 768)  return Math.min(2, slides.length);
-      if (w < 1024) return Math.min(3, slides.length);
-      return Math.min(options.slidesVisible ?? 3, slides.length);
-    }
-
-    function getSlideWidth() {
-      const visible = getSlidesVisible();
-      return (wrapper.offsetWidth - config.gap * (visible - 1)) / visible;
-    }
-
-    // ── Posición objetivo ──────────────────────────────────────
-
-    function getTargetX(index) {
-      const sw = getSlideWidth() + config.gap;
-      return -(index * sw);
-    }
-
-    // ── Render ─────────────────────────────────────────────────
-
-    function updateSlideWidths() {
-      const sw = getSlideWidth();
-      slides.forEach(slide => {
-        slide.style.width = `${sw}px`;
-        slide.style.marginRight = `${config.gap}px`;
+      // Fade out
+      [textEl, authorEl].forEach(el => {
+        if (el) { el.style.opacity = '0'; el.style.transform = `translateY(${dir * 8}px)`; }
       });
+
+      setTimeout(() => {
+        if (textEl)   textEl.textContent   = `"${t.texto}"`;
+        if (authorEl) authorEl.textContent = t.nombre;
+        if (cargoEl)  cargoEl.textContent  = t.cargo;
+        if (starsEl) {
+          starsEl.innerHTML = Array.from({ length: t.calificacion }, () =>
+            `<svg class="testi-card__star" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>`
+          ).join('');
+        }
+        // Fade in
+        [textEl, authorEl].forEach(el => {
+          if (el) {
+            el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }
+        });
+      }, 220);
+
+      resetAuto();
     }
 
-    function goTo(index) {
-      const max = config.loop
-        ? slides.length - getSlidesVisible()
-        : slides.length - getSlidesVisible();
+    function next() { show(current + 1, 1); }
+    function prev() { show(current - 1, -1); }
 
-      if (index < 0) {
-        current = config.loop ? max : 0;
-      } else if (index > max) {
-        current = config.loop ? 0 : max;
-      } else {
-        current = index;
-      }
-
-      track.style.transform = `translateX(${getTargetX(current)}px)`;
-      updateDots();
-      updateButtons();
+    function startAuto() {
+      autoTimer = setInterval(next, 6000);
+    }
+    function resetAuto() {
+      clearInterval(autoTimer);
+      startAuto();
     }
 
-    function updateDots() {
-      if (!dotsWrap) return;
-      const dots = dotsWrap.querySelectorAll('.carousel__dot');
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === current);
-      });
+    if (prevBtn) prevBtn.addEventListener('click', prev);
+    if (nextBtn) nextBtn.addEventListener('click', next);
+
+    // Touch / swipe on the card
+    const card = document.getElementById('testi-card');
+    if (card) {
+      let startX = 0;
+      card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      card.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 50) dx < 0 ? next() : prev();
+      }, { passive: true });
     }
 
-    function updateButtons() {
-      if (!prevBtn || !nextBtn) return;
-      const max = slides.length - getSlidesVisible();
-      if (!config.loop) {
-        prevBtn.disabled = current === 0;
-        nextBtn.disabled = current >= max;
-      }
-    }
-
-    function buildDots() {
-      if (!dotsWrap) return;
-      const max = slides.length - getSlidesVisible() + 1;
-      dotsWrap.innerHTML = '';
-      for (let i = 0; i < max; i++) {
-        const dot = document.createElement('button');
-        dot.className = `carousel__dot${i === 0 ? ' active' : ''}`;
-        dot.setAttribute('aria-label', `Ir a slide ${i + 1}`);
-        dot.addEventListener('click', () => { goTo(i); resetAutoplay(); });
-        dotsWrap.appendChild(dot);
-      }
-    }
-
-    // ── Controles ──────────────────────────────────────────────
-
-    function next() { goTo(current + 1); }
-    function prev() { goTo(current - 1); }
-
-    if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetAutoplay(); });
-    if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetAutoplay(); });
-
-    // ── Teclado ────────────────────────────────────────────────
-
-    wrapper.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft')  { prev(); resetAutoplay(); }
-      if (e.key === 'ArrowRight') { next(); resetAutoplay(); }
-    });
-
-    // ── Touch / Drag ───────────────────────────────────────────
-
-    function onDragStart(x) {
-      isDragging = true;
-      dragStartX = x;
-      track.style.transition = 'none';
-    }
-
-    function onDragMove(x) {
-      if (!isDragging) return;
-      dragOffset = x - dragStartX;
-      track.style.transform = `translateX(${getTargetX(current) + dragOffset}px)`;
-    }
-
-    function onDragEnd() {
-      if (!isDragging) return;
-      isDragging = false;
-      track.style.transition = '';
-
-      const threshold = getSlideWidth() * 0.25;
-      if (dragOffset < -threshold) next();
-      else if (dragOffset > threshold) prev();
-      else goTo(current);
-
-      dragOffset = 0;
-      resetAutoplay();
-    }
-
-    track.addEventListener('mousedown',  e => onDragStart(e.clientX));
-    track.addEventListener('mousemove',  e => { e.preventDefault(); onDragMove(e.clientX); });
-    track.addEventListener('mouseup',    onDragEnd);
-    track.addEventListener('mouseleave', onDragEnd);
-
-    track.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX), { passive: true });
-    track.addEventListener('touchmove',  e => onDragMove(e.touches[0].clientX),  { passive: true });
-    track.addEventListener('touchend',   onDragEnd);
-
-    // ── Autoplay ───────────────────────────────────────────────
-
-    function startAutoplay() {
-      if (!config.autoplay) return;
-      autoplayTimer = setInterval(next, config.autoplayDelay);
-    }
-
-    function stopAutoplay() {
-      clearInterval(autoplayTimer);
-    }
-
-    function resetAutoplay() {
-      stopAutoplay();
-      startAutoplay();
-    }
-
-    // Pausar en hover
-    wrapper.addEventListener('mouseenter', stopAutoplay);
-    wrapper.addEventListener('mouseleave', () => { if (config.autoplay) startAutoplay(); });
-
-    // ── Resize ─────────────────────────────────────────────────
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        updateSlideWidths();
-        buildDots();
-        goTo(current);
-      }, 200);
-    });
-
-    // ── Inicialización ─────────────────────────────────────────
-
-    updateSlideWidths();
-    buildDots();
-    goTo(0);
-    startAutoplay();
+    // Init
+    show(0);
+    startAuto();
   }
 
   return { init };
+
 })();
